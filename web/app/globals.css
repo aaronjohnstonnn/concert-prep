@@ -104,3 +104,9 @@ form + p {
     width: 100%;
   }
 }
+
+.error-message {
+    margin-top: 12px;
+    color: #ff8f8f;
+    font-weight: 700;
+}
