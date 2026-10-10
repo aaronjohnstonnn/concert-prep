@@ -75,7 +75,7 @@ export default function Home() {
         <p>Search for an artist and discover the best songs to listen to before your next concert.</p>
 
         <form onSubmit={handleSubmit}>
-          <label htmlFor="artist-search">Artist Name</label>
+          <label htmlFor="artist-search">Artist Name:</label>
 
           <div>
             <input 
@@ -101,7 +101,7 @@ export default function Home() {
           <ul>
             {results.map((track) => (
               <li key={track.spotifyURL}>
-                <strong>{track.name}</strong> - {track.artist}
+                <strong>{track.name}</strong>{track.artist}
                 <br />
                 <em>{track.album}</em>
                 <br />
