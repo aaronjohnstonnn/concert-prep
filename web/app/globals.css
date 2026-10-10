@@ -22,10 +22,20 @@ main {
     display: grid;
     place-items: center;
     padding: 24px;
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(182, 255, 77, 0.12),
+            transparent 55%
+        ),
+        var(--background)
 }
 
 section {
     width: min(100%, 720px);
+    padding: 40px;
+    border-radius: 24px;
+    background: var(--surface);
 }
 
 section > p:first-child {
@@ -74,6 +84,11 @@ input {
   font: inherit;
 }
 
+input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
 button {
   border: 0;
   border-radius: 10px;
@@ -109,4 +124,58 @@ form + p {
     margin-top: 12px;
     color: #ff8f8f;
     font-weight: 700;
+}
+
+ul {
+    list-style: none;
+    margin: 40px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 14px;
+}
+
+li {
+    padding: 18px;
+    border: 1px solid #343440;
+    border-radius: 14px;
+    background: var(--surface);
+    position: relative;
+}
+
+li strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 1.1rem;
+}
+
+li em {
+    color: var(--muted);
+    font-style: normal;
+    font-size: 0.95rem;
+}
+
+li a {
+    display: inline-block;
+    top: 18px;
+    right: 18px;
+    position: absolute;
+}
+
+li a img {
+    display: block;
+    width: 170px;
+    height: auto;
+}
+
+@media (max-width: 560px) {
+  li {
+    padding-right: 18px;
+  }
+
+  li a {
+    position: static;
+    display: block;
+    width: fit-content;
+    margin-top: 12px;
+  }
 }
