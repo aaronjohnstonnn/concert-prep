@@ -7,6 +7,7 @@ type Track = {
   artist: string;
   album: string;
   spotifyURL: string;
+  albumImage: string;
 };
 
 export default function Home() {
@@ -39,6 +40,8 @@ export default function Home() {
 
     async function search() {
       setLoading(true);
+      setResults([]);
+      setError("");
 
       try {
         const res = await fetch(
@@ -85,23 +88,30 @@ export default function Home() {
             value={artistName}
             onChange={(event) => setArtistName(event.target.value)}
             />
-            <button type="submit">Search</button>
+            <button type="submit" disabled={loading}>{loading ? "Searching..." : "Search"}</button>
           </div>
         </form>
 
         {error && <p className="error-message">{error}</p>}
 
         {loading && <p>Searching...</p>}
+        {!loading && submittedArtist && results.length === 0 && !error && (
+          <p>No tracks found for {submittedArtist}</p>)}
 
         {submittedArtist && (
-          <h2>Tracks for {submittedArtist}:</h2>
+          <h2>Top tracks for {submittedArtist}:</h2>
         )}
 
         {results.length > 0 && (
           <ul>
             {results.map((track) => (
               <li key={track.spotifyURL}>
-                <strong>{track.name}</strong>{track.artist}
+                <img
+                  className="album-cover"
+                  src={track.albumImage}
+                  alt={`Album cover for ${track.album}`}
+                  />
+                <strong>{track.name}</strong> - {track.artist}
                 <br />
                 <em>{track.album}</em>
                 <br />
@@ -111,7 +121,7 @@ export default function Home() {
                   rel="noopener noreferrer"
                   >
                     <img
-                    src="spotify.png"
+                    src="/spotify.png"
                     alt={`Listen to ${track.name} on Spotify`}
                     >
                       </img>
