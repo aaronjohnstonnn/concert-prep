@@ -2,14 +2,14 @@
 
 ConcertPrep helps people prepare for concerts by discovering songs from the artists they are about to see.
 
-Users will be able to search for the artist or concert, view the artists in the lineup, and recieve a ranked list of songs to listen to before the show. Each song will include links to both Spotify and Apple Music.
+Users will be able to search for the artist or concert, view the artists in the lineup, and recieve a ranked list of songs to listen to before the show. Each song will include links to Spotify.
 
 ## Planned Features
 
 - Search for an artist
 - View an artists songs
 - Sort songs by popularity
-- Open songs in Spotify and Apple Music
+- Open songs in Spotify
 - Search for concerts and view artist lineups
 - Filter songs by artist
 - Generate a balanced pre-concert listening list
@@ -37,7 +37,6 @@ Planning
 - [ ] Display artist tracks
 - [ ] Sort tracks by popularity
 - [ ] Add Spotify links
-- [ ] Add Apple Music links
 - [ ] Add concert search
 - [ ] Build recommendation algorithm
 - [ ] Deploy first public version
