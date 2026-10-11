@@ -31,10 +31,49 @@ export async function GET(request: NextRequest) {
   const tokenData = await tokenResponse.json();
   const accessToken = tokenData.access_token;
 
-  const spotifyResponse = await fetch (
+  const artistResponse = await fetch (
     `https://api.spotify.com/v1/search?q=${encodeURIComponent(
         artistName ?? ""
-    )}&type=track&limit=3&market=AU`,
+    )}&type=artist&limit=1&market=AU`,
+    {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    }
+  )
+
+  if (!artistResponse.ok) {
+    return NextResponse.json(
+        { error: "Could not find that artist on Spotify." },
+        { status: 500 }
+    );
+  }
+
+  const artistData = await artistResponse.json();
+  const artist = artistData.artists.items[0];
+
+  const searchedName = (artistName ?? "").trim().toLowerCase();
+  const foundName = artist.name.toLowerCase();
+
+  if (searchedName !== foundName) {
+    return NextResponse.json (
+        { error: `No exact artist found for "${artistName}".`},
+        { status: 404 }
+    );
+  }
+
+  if (!artist) {
+    return NextResponse.json(
+        { error: `No artist found for "${artistName}".`},
+        { status: 404 }
+    );
+  }
+
+  const trackQuery = artist.name;
+  const spotifyResponse = await fetch (
+    `https://api.spotify.com/v1/search?q=${encodeURIComponent(
+        trackQuery
+    )}&type=track&limit=6&market=AU`,
     {
         headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -51,11 +90,17 @@ export async function GET(request: NextRequest) {
 
     const spotifyData = await spotifyResponse.json();
     const tracks = spotifyData.tracks.items;
+    const artistTracks = tracks.filter((track: any) =>
+        track.artists.some(
+            (trackArtist: any) => trackArtist.id === artist.id
+        )
+    );
 
-   const trackResults = tracks.map((track: any) => ({
+   const trackResults = artistTracks.map((track: any) => ({
     name: track.name,
     artist: track.artists[0]?.name ?? "Unkown artist",
     album: track.album.name,
+    albumImage: track.album.images[0]?.url ?? "",
     spotifyURL: track.external_urls.spotify,
    }));
 

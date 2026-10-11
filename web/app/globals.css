@@ -127,6 +127,12 @@ button:hover {
   transform: scale(1.05);
 }
 
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+}
+
 
 form + p {
   margin-top: 16px;
@@ -169,6 +175,7 @@ li {
   border-radius: 14px;
   background: var(--surface);
   position: relative;
+  overflow: auto;
 }
 
 
@@ -228,4 +235,13 @@ li a img {
   100% {
     background-position: 35% 100%, 0% 0%;
   }
+}
+
+.album-cover {
+    width: 84px;
+    height: 84px;
+    margin-right: 16px;
+    float: left;
+    border-radius: 8px;
+    object-fit: cover;
 }
