@@ -18,6 +18,8 @@ type Artist = {
   spotifyURL: string;
 };
 
+const SAVED_TRACKS_KEY = "concertprep-saved-tracks";
+
 export default function Home() {
   const [artistName, setArtistName] = useState("");
   const [submittedArtist, setSubmittedArtist] = useState("");
@@ -25,6 +27,72 @@ export default function Home() {
   const [error, setError] = useState("");
   const [results, setResults] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
+  const [savedTracks, setSavedTracks] = useState<Track[]>([]);
+  const [isListOpen, setIsListOpen] = useState(false);
+  const [hasLoadedSavedTracks, setHasLoadedSavedTracks] = useState(false);
+
+  useEffect(() => {
+    try {
+      const storedTracks = window.localStorage.getItem(SAVED_TRACKS_KEY);
+
+      if (storedTracks) {
+        const parsedTracks = JSON.parse(storedTracks);
+
+        if (Array.isArray(parsedTracks)) {
+          setSavedTracks(parsedTracks);
+        }
+      }
+    } catch {
+      window.localStorage.removeItem(SAVED_TRACKS_KEY);
+    } finally {
+      setHasLoadedSavedTracks(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedSavedTracks) {
+      return;
+    }
+
+    window.localStorage.setItem(
+      SAVED_TRACKS_KEY,
+      JSON.stringify(savedTracks)
+    );
+  }, [savedTracks, hasLoadedSavedTracks]);
+
+  function isTrackSaved(track: Track) {
+    return savedTracks.some(
+      (savedTrack) => savedTrack.spotifyURL === track.spotifyURL
+    );
+  }
+
+  function toggleSavedTrack(track: Track) {
+    const alreadySaved = isTrackSaved(track);
+
+    if (alreadySaved) {
+      setSavedTracks((currentTracks) =>
+        currentTracks.filter(
+          (savedTrack) => savedTrack.spotifyURL !== track.spotifyURL
+        )
+      );
+
+      return;
+    }
+
+    setSavedTracks((currentTracks) => [...currentTracks, track]);
+  }
+
+  function removeSavedTrack(spotifyURL: string) {
+    setSavedTracks((currentTracks) =>
+      currentTracks.filter(
+        (savedTrack) => savedTrack.spotifyURL !== spotifyURL
+      )
+    );
+  }
+
+  function clearSavedTracks() {
+    setSavedTracks([]);
+  }
 
   function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -99,10 +167,20 @@ export default function Home() {
           </span>
         </a>
 
-        <nav className="header-nav" aria-label="Main navigation">
-          <a href="#search">Search</a>
-          <a href="#how-it-works">How it works</a>
-        </nav>
+        <button
+          className="my-list-nav-button"
+          type="button"
+          onClick={() => setIsListOpen(true)}
+        >
+          My List
+
+          {savedTracks.length > 0 && (
+            <>
+              <span className="nav-divider" aria-hidden="true" />
+              <span className="saved-count">{savedTracks.length}</span>
+            </>
+          )}
+        </button>
       </header>
 
       <section className="hero" id="search">
@@ -135,7 +213,7 @@ export default function Home() {
               <input
                 id="artist-search"
                 type="text"
-                placeholder="Search for an artist, e.g. Tame Impala"
+                placeholder="Search for an artist, e.g. Drake"
                 value={artistName}
                 onChange={(event) => setArtistName(event.target.value)}
               />
@@ -146,7 +224,8 @@ export default function Home() {
           </form>
 
           <p className="hero-note">
-            Discover essential tracks and open them in Spotify.
+            Discover essential tracks, save your favourites, and open them in
+            Spotify.
           </p>
         </div>
       </section>
@@ -176,11 +255,7 @@ export default function Home() {
           <>
             <section className="artist-banner">
               {artist.image && (
-                <img
-                  className="artist-image"
-                  src={artist.image}
-                  alt=""
-                />
+                <img className="artist-image" src={artist.image} alt="" />
               )}
               <div className="artist-banner-shade" />
 
@@ -232,42 +307,69 @@ export default function Home() {
             </div>
 
             <ul className="track-list">
-              {results.map((track, index) => (
-                <li className="track-card" key={track.spotifyURL}>
-                  <span className="track-number">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
+              {results.map((track, index) => {
+                const saved = isTrackSaved(track);
 
-                  {track.albumImage ? (
-                    <img
-                      className="album-cover"
-                      src={track.albumImage}
-                      alt={`Album cover for ${track.album}`}
-                    />
-                  ) : (
-                    <div className="album-cover album-cover-fallback">
-                      ♫
+                return (
+                  <li className="track-card" key={track.spotifyURL}>
+                    <span className="track-number">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+
+                    {track.albumImage ? (
+                      <img
+                        className="album-cover"
+                        src={track.albumImage}
+                        alt={`Album cover for ${track.album}`}
+                      />
+                    ) : (
+                      <div className="album-cover album-cover-fallback">♫</div>
+                    )}
+
+                    <div className="track-info">
+                      <strong>{track.name}</strong>
+                      <span>{track.artist}</span>
+                      <em>{track.album}</em>
                     </div>
-                  )}
 
-                  <div className="track-info">
-                    <strong>{track.name}</strong>
-                    <span>{track.artist}</span>
-                    <em>{track.album}</em>
-                  </div>
+                    <a
+                      className="track-spotify-link"
+                      href={track.spotifyURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Listen to ${track.name} on Spotify`}
+                    >
+                      <span aria-hidden="true">▶</span>
+                      <span className="track-spotify-label">Listen</span>
+                    </a>
 
-                  <a
-                    className="track-spotify-link"
-                    href={track.spotifyURL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Listen to ${track.name} on Spotify`}
-                  >
-                    <span aria-hidden="true">▶</span>
-                    <span className="track-spotify-label">Listen</span>
-                  </a>
-                </li>
-              ))}
+                    <button
+                      className={`save-track-button ${saved ? "is-saved" : ""}`}
+                      type="button"
+                      onClick={() => toggleSavedTrack(track)}
+                      aria-pressed={saved}
+                      aria-label={
+                        saved
+                          ? `Remove ${track.name} from My List`
+                          : `Save ${track.name} to My List`
+                      }
+                    >
+                      <svg
+                        className="save-track-icon"
+                        viewBox="0 0 24 24"
+                        fill={saved ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                      </svg>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </>
         )}
@@ -294,8 +396,8 @@ export default function Home() {
 
           <article className="step-card">
             <span className="step-number">03</span>
-            <h3>Listen before the show</h3>
-            <p>Open tracks directly in Spotify and feel ready.</p>
+            <h3>Build your list</h3>
+            <p>Save your favourites so you know what to hear before the show.</p>
           </article>
         </div>
       </section>
@@ -313,9 +415,125 @@ export default function Home() {
             Concert<span>Prep</span>
           </span>
         </a>
+
         <p>Know the songs. Feel ready for the show.</p>
-        <span className="footer-credit">Made for the moments that matter.</span>
+
+        <span className="footer-credit">
+          Made for the moments that matter.
+        </span>
       </footer>
+
+      <div
+        className={`list-overlay ${isListOpen ? "is-open" : ""}`}
+        onClick={() => setIsListOpen(false)}
+      >
+        <div className="list-overlay-blur" aria-hidden="true" />
+
+        <aside
+          className="my-list-drawer"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="drawer-header">
+            <div>
+              <p className="eyebrow">SAVED FOR THE SHOW</p>
+              <h2>Your Pre-Show List</h2>
+            </div>
+
+            <button
+              className="drawer-close-button"
+              type="button"
+              onClick={() => setIsListOpen(false)}
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="drawer-toolbar">
+            <p className="drawer-description">
+              {savedTracks.length === 0
+                ? "Save tracks from any artist search and they will appear here."
+                : `${savedTracks.length} ${
+                    savedTracks.length === 1 ? "track" : "tracks"
+                  } saved for your next show.`}
+            </p>
+
+            {savedTracks.length > 0 && (
+              <button
+                className="clear-list-button"
+                type="button"
+                onClick={clearSavedTracks}
+              >
+                Clear list
+              </button>
+            )}
+          </div>
+
+          {savedTracks.length === 0 ? (
+            <div className="empty-list-state">
+              <span className="empty-list-icon" aria-hidden="true">
+                ♡
+              </span>
+              <h3>Your list is waiting</h3>
+              <p>
+                Search an artist, then save tracks you want to hear before the
+                show.
+              </p>
+              <button
+                className="empty-list-button"
+                type="button"
+                onClick={() => setIsListOpen(false)}
+              >
+                Search for an artist
+              </button>
+            </div>
+          ) : (
+            <ul className="saved-track-list">
+              {savedTracks.map((track) => (
+                <li className="saved-track-card" key={track.spotifyURL}>
+                  {track.albumImage ? (
+                    <img
+                      className="saved-album-cover"
+                      src={track.albumImage}
+                      alt={`Album cover for ${track.album}`}
+                    />
+                  ) : (
+                    <div className="saved-album-cover album-cover-fallback">
+                      ♫
+                    </div>
+                  )}
+
+                  <div className="saved-track-info">
+                    <strong>{track.name}</strong>
+                    <span>{track.artist}</span>
+                    <em>{track.album}</em>
+                  </div>
+
+                  <div className="saved-track-actions">
+                    <a
+                      className="saved-spotify-link"
+                      href={track.spotifyURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Listen to ${track.name} on Spotify`}
+                    >
+                      ▶
+                    </a>
+
+                    <button
+                      className="remove-track-button"
+                      type="button"
+                      onClick={() => removeSavedTrack(track.spotifyURL)}
+                      aria-label={`Remove ${track.name} from My List`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </aside>
+      </div>
     </main>
   );
 }
